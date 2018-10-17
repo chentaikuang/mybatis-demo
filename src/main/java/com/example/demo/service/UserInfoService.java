@@ -16,4 +16,12 @@ public class UserInfoService {
         UserInfo userInfo = userInfoMapper.selectByPrimaryKey(Integer.valueOf(id));
         return userInfo;
     }
+
+    public UserInfo changeAgeById(UserInfo userInfo) throws Exception {
+        int no = userInfoMapper.updateByPrimaryKey(userInfo);
+        if (no == 0){
+            throw new Exception("change age by id fail ,id : "+userInfo.getId());
+        }
+        return  getById(userInfo.getId());
+    }
 }

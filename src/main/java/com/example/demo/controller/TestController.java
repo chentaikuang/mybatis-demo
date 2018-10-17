@@ -25,4 +25,14 @@ public class TestController {
         }
         return user;
     }
+
+    @RequestMapping("/changeAgeById")
+    public UserInfo changeAgeById(int id,int age) throws Exception {
+        UserInfo user = userInfoService.getById(id);
+        if (user == null){
+            throw new Exception("no found user by id,id : " + id);
+        }
+        user.setAge(age);
+        return userInfoService.changeAgeById(user);
+    }
 }
