@@ -13,6 +13,7 @@ public class TestController {
     @Autowired
     UserInfoService userInfoService;
 
+    //http://localhost:8888/test/getById?id=1
     @RequestMapping("/getById")
     public UserInfo getById(int id) {
         UserInfo user = userInfoService.getById(id);
