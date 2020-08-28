@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.example.demo.service.SqlService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -86,6 +87,32 @@ public class SqlController {
         map.put("name", name);
         map.put("rst", rst);
         return map;
+    }
+
+    //http://localhost:8888/test/mq
+    @RequestMapping("/mq")
+    public Map mq() {
+        String sqlScript = "select id, name, age, remark from xiaochen.t_user_info where id = #userId or name = #orderId";
+        Map<String,Object> params = new HashMap();
+        params.put("#userId",1);
+        if (new Random().nextBoolean()){
+            params.put("#orderId","123456789");
+        }
+        Set<Map.Entry<String, Object>> set = params.entrySet();
+        for (Map.Entry<String,Object> entry : set) {
+            if (entry.getValue() instanceof Integer){
+                sqlScript = sqlScript.replace(entry.getKey(), entry.getValue().toString());
+            }else {
+                sqlScript = sqlScript.replace(entry.getKey(), "'"+entry.getValue().toString()+"'");
+            }
+        }
+        checkSql(sqlScript);
+        Map map = sqlService.selectOne(sqlScript);
+        return map;
+    }
+
+    private void checkSql(String sqlScript) {
+        Assert.isTrue(sqlScript.indexOf("#") == -1,"参数缺或规则SQL配置有误");
     }
 
     private int getMaxId() {

@@ -1,5 +1,6 @@
 package com.example.demo.mapper.dao;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -17,5 +18,5 @@ public interface SqlDao {
 
     int delete(@Param("sqlScript") String sqlScript);
 
-
+    Map selectByMap(@Param("sqlScript")String sqlScript, Map params);
 }

@@ -21,4 +21,5 @@
     <delete id="delete">
         ${sqlScript}
     </delete>
+
 </mapper>
