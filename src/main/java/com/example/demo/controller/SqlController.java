@@ -24,7 +24,7 @@ public class SqlController {
         Map map = new HashMap();
         String sqlScript = "";
         if ("1".equals(batch)) {
-            sqlScript = "select * from xiaochen.t_user_info where id = 1";
+            sqlScript = "select * from xiaochen.t_user_info where id > 1";
             List<Map<String,Object>> list = sqlService.selectList(sqlScript);
             if (CollectionUtils.isEmpty(list)){
                 return Collections.emptyMap();
