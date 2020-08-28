@@ -64,5 +64,38 @@ public class SqlController {
         return map;
     }
 
+    //http://localhost:8888/test/modifySql
+    @RequestMapping("/modifySql")
+    public Map modifySql(@RequestParam(value = "name", defaultValue = "defaultName") String name) {
+        String sqlScript = "INSERT INTO xiaochen.t_user_info(name,age,remark) VALUES ('micromall', '18', 'micromall')";
+        int rst = 0;
+        Map map = new HashMap();
+        int maxId = getMaxId();
+        if ("update".equals(name)) {
+            name = name + new Random().nextInt(100);
+            sqlScript = "UPDATE xiaochen.t_user_info SET name = '" + (name) + "' WHERE id = " + maxId;
+            rst = sqlService.update(sqlScript);
+        } else if ("delete".equals(name)) {
+            sqlScript = "delete from xiaochen.t_user_info where id = " + maxId;
+            rst = sqlService.delete(sqlScript);
+        } else {
+            rst = sqlService.insertOne(sqlScript);
+            maxId = getMaxId();
+        }
+        map.put("maxId", maxId);
+        map.put("name", name);
+        map.put("rst", rst);
+        return map;
+    }
+
+    private int getMaxId() {
+        String sqlScript;
+        sqlScript = "select max(id) maxId from xiaochen.t_user_info";
+        Map map = sqlService.selectOne(sqlScript);
+        int maxId = map.get("maxId") == null || !map.containsKey("maxId") ? 0 : Integer.parseInt(map.get("maxId").toString());
+        System.out.println("maxId:" + maxId);
+        return maxId;
+    }
+
 
 }
