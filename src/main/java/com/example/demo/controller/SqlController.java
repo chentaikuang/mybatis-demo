@@ -1,14 +1,14 @@
 package com.example.demo.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.example.demo.service.SqlService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/test")
@@ -17,15 +17,31 @@ public class SqlController {
     @Autowired
     SqlService sqlService;
 
-    //http://localhost:8888/test/sql
-    @RequestMapping("/sql")
-    public Map sql() {
+    //http://localhost:8888/test/querySql
+    @RequestMapping("/querySql")
+    public Map querySql(@RequestParam(value = "batch", defaultValue = "0") String batch) {
 
-        String sqlScript = "select id, name, age, remark from t_user_info where id = 1";
+        Map map = new HashMap();
+        String sqlScript = "";
+        if ("1".equals(batch)) {
+            sqlScript = "select * from xiaochen.t_user_info where id = 1";
+            List<Map<String,Object>> list = sqlService.selectList(sqlScript);
+            if (CollectionUtils.isEmpty(list)){
+                return Collections.emptyMap();
+            }
+            for (Map<String, Object> item : list) {
+                System.out.println(JSONObject.toJSONString(item));
+                map.put(item.get("id"),item);
+            }
+            return map;
+        }
+
+        sqlScript = "select id, name, age, remark from xiaochen.t_user_info where id = 1";
         sqlScript = "select id, name, age, remark from micromall.t_user_info where id = 1";
         sqlScript = "SELECT mt.* FROM micromall.t_user_info mt INNER join xiaochen.tb_user xt ON mt.id = xt.id WHERE mt.id = 2";
-        Map map = sqlService.executeSql(sqlScript);
-        if (map == null) {
+        sqlScript = "SELECT COUNT(1) totalCount FROM xiaochen.t_user_info WHERE age > 10";
+        map = sqlService.selectOne(sqlScript);
+        if (map == null || map.isEmpty()) {
             map = new HashMap();
             map.put("tips", "null");
             return map;
