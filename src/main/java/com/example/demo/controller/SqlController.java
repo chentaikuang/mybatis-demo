@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.example.demo.service.SqlService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/test")
 public class SqlController {
@@ -92,12 +94,10 @@ public class SqlController {
     //http://localhost:8888/test/mq
     @RequestMapping("/mq")
     public Map mq() {
-        String sqlScript = "select id, name, age, remark from xiaochen.t_user_info where id = #userId or name = #orderId";
+        String sqlScript = "select id, name, age, remark from xiaochen.t_user_info where id = [userId] or name = [orderId]";
         Map<String,Object> params = new HashMap();
-        params.put("#userId",1);
-        if (new Random().nextBoolean()){
-            params.put("#orderId","123456789");
-        }
+        params.put("[userId]",1);
+        params.put("[orderId]","123456789");
         Set<Map.Entry<String, Object>> set = params.entrySet();
         for (Map.Entry<String,Object> entry : set) {
             if (entry.getValue() instanceof Integer){
@@ -106,12 +106,14 @@ public class SqlController {
                 sqlScript = sqlScript.replace(entry.getKey(), "'"+entry.getValue().toString()+"'");
             }
         }
+
         checkSql(sqlScript);
         Map map = sqlService.selectOne(sqlScript);
         return map;
     }
 
     private void checkSql(String sqlScript) {
+        log.info("sqlScript:{}",sqlScript);
         Assert.isTrue(sqlScript.indexOf("#") == -1,"参数缺或规则SQL配置有误");
     }
 
