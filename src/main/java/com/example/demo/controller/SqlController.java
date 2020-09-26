@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.example.demo.service.SqlService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @RestController
@@ -28,13 +30,13 @@ public class SqlController {
         String sqlScript = "";
         if ("1".equals(batch)) {
             sqlScript = "select * from xiaochen.t_user_info where id > 1";
-            List<Map<String,Object>> list = sqlService.selectList(sqlScript);
-            if (CollectionUtils.isEmpty(list)){
+            List<Map<String, Object>> list = sqlService.selectList(sqlScript);
+            if (CollectionUtils.isEmpty(list)) {
                 return Collections.emptyMap();
             }
             for (Map<String, Object> item : list) {
                 System.out.println(JSONObject.toJSONString(item));
-                map.put(item.get("id"),item);
+                map.put(item.get("id"), item);
             }
             return map;
         }
@@ -95,26 +97,27 @@ public class SqlController {
     @RequestMapping("/mq")
     public Map mq() {
         String sqlScript = "select id, name, age, remark from xiaochen.t_user_info where id = [userId] or name = [orderId]";
-        Map<String,Object> params = new HashMap();
-        params.put("[userId]",1);
-        params.put("[orderId]","123456789");
-        Set<Map.Entry<String, Object>> set = params.entrySet();
-        for (Map.Entry<String,Object> entry : set) {
-            if (entry.getValue() instanceof Integer){
-                sqlScript = sqlScript.replace(entry.getKey(), entry.getValue().toString());
-            }else {
-                sqlScript = sqlScript.replace(entry.getKey(), "'"+entry.getValue().toString()+"'");
+        if (sqlScript.indexOf("[") > 0 || sqlScript.indexOf("]") > 0) {
+            Map<String, Object> params = new HashMap();
+            params.put("[userId]", 1);
+            params.put("[orderId]", "123456789");
+            Set<Map.Entry<String, Object>> set = params.entrySet();
+            for (Map.Entry<String, Object> entry : set) {
+                if (entry.getValue() instanceof Integer) {
+                    sqlScript = sqlScript.replace(entry.getKey(), entry.getValue().toString());
+                } else {
+                    sqlScript = sqlScript.replace(entry.getKey(), "'" + entry.getValue().toString() + "'");
+                }
             }
         }
-
         checkSql(sqlScript);
         Map map = sqlService.selectOne(sqlScript);
         return map;
     }
 
     private void checkSql(String sqlScript) {
-        log.info("sqlScript:{}",sqlScript);
-        Assert.isTrue(sqlScript.indexOf("#") == -1,"参数缺或规则SQL配置有误");
+        log.info("sqlScript:{}", sqlScript);
+        Assert.isTrue(sqlScript.indexOf("#") == -1, "参数缺或规则SQL配置有误");
     }
 
     private int getMaxId() {
@@ -124,6 +127,25 @@ public class SqlController {
         int maxId = map.get("maxId") == null || !map.containsKey("maxId") ? 0 : Integer.parseInt(map.get("maxId").toString());
         System.out.println("maxId:" + maxId);
         return maxId;
+    }
+
+    //http://localhost:8888/test/batchInsert?count=1000000
+    @RequestMapping("/batchInsert")
+    public Map batchInsert(@RequestParam("count") Integer count) {
+        AtomicInteger atomicInteger = new AtomicInteger(0);
+        long startTime = System.currentTimeMillis();
+        while (count-- > 0) {
+            String sqlScript = "INSERT INTO t_user_info(name,age,remark) VALUES ('"
+                    + new Random().nextInt(888888)
+                    + "', '" + new Random().nextInt(888888) + "', '"
+                    + RandomStringUtils.randomAlphanumeric(5) + "');";
+            sqlService.insertOne(sqlScript);
+            atomicInteger.incrementAndGet();
+        }
+        Map map = new HashMap();
+        map.put("time", (System.currentTimeMillis() - startTime) / 1000 + " s");
+        map.put("rst", atomicInteger.get());
+        return map;
     }
 
 
